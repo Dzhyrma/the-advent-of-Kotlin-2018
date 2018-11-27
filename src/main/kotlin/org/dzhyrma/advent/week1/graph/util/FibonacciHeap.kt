@@ -93,129 +93,163 @@ class FibonacciHeap<T> {
 	 *
 	 * @return a node representing the element with minimal priority in the heap
 	 */
-	/*fun dequeueMin(): Node<T>? {
-		if (min == null)
-			return null
+	fun dequeueMin(): Node<T>? {
+		return min?.also {
+			deleteMin(it)
+			consolidateTrees()
 
-		val res = min
-		if (min!!.left === min) {
-			min = min!!.child
-		} else if (min!!.child == null) {
-			min!!.left!!.right = min!!.right
-			min!!.right!!.left = min!!.left
-			min = min!!.right!!.left
-		} else {
-			min!!.left!!.right = min!!.child
-			min!!.right!!.left = min!!.child!!.left
-			min!!.child!!.left!!.right = min!!.right
-			min!!.child!!.left = min!!.left
-			min = min!!.child!!.left
+			size--
+			it.child = null
+			it.right = it
+			it.left = it
+			it.rank = -1
 		}
+	}
 
-		if (min != null) {
-			val visited = arrayOfNulls<Node<*>>(32 - Integer.numberOfLeadingZeros(size))
-			var cur = min!!.right
-			var temp: Node<T>
-			min!!.parent = null
-			visited[min!!.rank] = min
-			while (visited[cur!!.rank] !== cur) {
-				cur!!.parent = null
-				while (visited[cur!!.rank] != null) {
-					temp = visited[cur.rank]
-					visited[cur.rank] = null
-					temp.left!!.right = temp.right
-					temp.right!!.left = temp.left
-					if (temp.priority < cur.priority) {
-						if (cur.left !== cur) {
-							temp.left = cur.left
-							temp.right = cur.right
-							cur.right!!.left = temp
-							cur.left!!.right = cur.right!!.left
-						} else {
-							temp.right = temp
-							temp.left = temp.right
-						}
-						temp = cur
-						cur = temp
-					}
-					if (cur.rank == 0) {
-						cur.child = temp
-						temp.left = temp
-						temp.right = temp.left
-					} else {
-						temp.right = cur.child!!.right
-						temp.left = cur.child
-						cur.child!!.right = temp
-						cur.child!!.right!!.left = cur.child!!.right
-						if (cur.child!!.priority > cur.child!!.right!!.priority)
-							cur.child = cur.child!!.right
-					}
-					temp.parent = cur
-					cur.rank++
+	private fun deleteMin(oldMin: Node<T>) {
+		min = when {
+			oldMin.left === min -> oldMin.child
+			oldMin.child == null -> {
+				oldMin.leaveNeighbours()
+				oldMin.right.left
+			}
+			else -> {
+				oldMin.child?.also { child ->
+					oldMin.left.right = child
+					oldMin.right.left = child.left
+					child.left.right = oldMin.right
+					child.left = oldMin.left
+					child.left
 				}
-				visited[cur.rank] = cur
-				if (cur.priority < min!!.priority)
-					min = cur
-				cur = cur.right
 			}
 		}
+		min?.parent = null
+	}
 
-		size--
-		res!!.child = null
-		res.right = res.child
-		res.left = res.right
-		res.rank = -1
-		return res
+	private fun consolidateTrees() {
+		min?.also { currentMin ->
+			val visited = arrayOfNulls<Node<T>>(32 - Integer.numberOfLeadingZeros(size))
+			var candidate = currentMin.right
+			visited[currentMin.rank] = currentMin
+			while (visited[candidate.rank] !== candidate) {
+				candidate.parent = null
+				while (visited[candidate.rank] != null) {
+					visited[candidate.rank]?.also { temp ->
+						visited[candidate.rank] = null
+						candidate = compareAndPlaceNodes(temp, candidate)
+					}
+				}
+				visited[candidate.rank] = candidate
+				if (candidate.priority < min!!.priority) {
+					min = candidate
+				}
+				candidate = candidate.right
+			}
+		}
+	}
+
+	private fun compareAndPlaceNodes(temp: Node<T>, candidate: Node<T>): Node<T> {
+		temp.leaveNeighbours()
+
+		if (temp.priority < candidate.priority) {
+			if (candidate.left !== candidate) {
+				temp.left = candidate.left
+				temp.right = candidate.right
+				candidate.right.left = temp
+				candidate.left.right = temp
+			} else {
+				temp.right = temp
+				temp.left = temp.right
+			}
+			placeNodes(candidate, temp)
+			return temp
+		} else {
+			placeNodes(temp, candidate)
+			return candidate
+		}
+	}
+
+	private fun placeNodes(temp: Node<T>, candidate: Node<T>) {
+		if (candidate.rank == 0) {
+			candidate.child = temp
+			temp.left = temp
+			temp.right = temp.left
+		} else {
+			candidate.child?.also { child ->
+				temp.right = child.right
+				temp.left = child
+				child.right = temp
+				child.right.left = temp
+				if (child.priority > temp.priority) {
+					candidate.child = temp
+				}
+			}
+		}
+		temp.parent = candidate
+		candidate.rank++
 	}
 
 	private fun cut(node: Node<T>) {
-		if (node.parent!!.child === node)
-			node.parent!!.child = if (node.left === node) null else node.right
-		node.parent!!.rank--
-		node.right!!.left = node.left
-		node.left!!.right = node.right
-		node.isMarked = false
-		insert(node)
-		if (node.parent.parent != null)
-			if (node.parent.isMarked)
-				cut(node.parent)
-			else
-				node.parent.isMarked = true
+		node.parent?.also { parent ->
+			if (parent.child === node) {
+				parent.child = if (node.left === node) null else node.right
+			}
+			parent.rank--
+			node.leaveNeighbours()
+			node.isMarked = false
+			insert(node)
+			if (parent.parent != null) {
+				when {
+					parent.isMarked -> cut(parent)
+					else -> parent.isMarked = true
+				}
+			}
+		}
 		node.parent = null
 	}
 
 	private fun decreaseKeyUnchecked(node: Node<T>, newPriority: Double) {
 		node.priority = newPriority
+		node.parent?.also { parent ->
+			if (node.priority > parent.priority) {
+				return
+			}
+			cut(node)
+		}
 		if (node.parent == null) {
-			if (node.priority <= min!!.priority)
-				min = node
+			min?.also { currentMin ->
+				if (node.priority <= currentMin.priority) {
+					min = node
+				}
+			}
 			return
 		}
-		if (node.priority > node.parent.priority)
-			return
-
-		cut(node)
 	}
 
 	private fun insert(node: Node<T>) {
-		node.left = min
-		node.right = min!!.right
-		min!!.right!!.left = node
-		min!!.right = min!!.right!!.left
-		if (min!!.priority >= node.priority)
-			min = node
+		min?.also { currentMin ->
+			node.left = currentMin
+			node.right = currentMin.right
+			currentMin.right.left = node
+			currentMin.right = node
+			if (currentMin.priority >= node.priority) {
+				min = node
+			}
+		}
 	}
 
 	private fun merge(node: Node<T>) {
-		min?.also {
-			node.left!!.right = min!!.right
-			node.left = min
-			min!!.right!!.left = node.left
-			min!!.right = node
-			if (min!!.priority > node.priority)
+		min?.also { currentMin ->
+			node.left.right = currentMin.right
+			val temp = node.left
+			node.left = currentMin
+			currentMin.right.left = temp
+			currentMin.right = node
+			if (currentMin.priority > node.priority) {
 				min = node
+			}
 		}
-	}*/
+	}
 
 	data class Node<T> constructor(
 		/**
@@ -225,11 +259,11 @@ class FibonacciHeap<T> {
 		/**
 		 * Returns the priority of the node
 		 */
-		val priority: Double,
+		var priority: Double,
 		internal val creator: FibonacciHeap<T>
 	) {
-		internal var left: Node<T>? = null
-		internal var right: Node<T>? = null
+		internal var left: Node<T> = this
+		internal var right: Node<T> = this
 		internal var child: Node<T>? = null
 		internal var parent: Node<T>? = null
 		internal var rank: Int = 0
@@ -240,5 +274,10 @@ class FibonacciHeap<T> {
 		 */
 		val isDequeued: Boolean
 			get() = rank < 0
+
+		internal fun leaveNeighbours() {
+			left.right = right
+			right.left = left
+		}
 	}
 }
