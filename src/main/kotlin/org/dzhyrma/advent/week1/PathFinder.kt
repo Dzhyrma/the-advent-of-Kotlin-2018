@@ -16,14 +16,21 @@ class PathFinder(
 		val (graph, source, target) = constructGraph(lines)
 
 		return AStarSearch.perform(graph, source, target) { a, b ->
-			val difX = (a.x - b.x).toDouble()
-			val difY = (a.y - b.y).toDouble()
-			Math.sqrt(difX * difX + difY * difY)
+			val difX = Math.abs(a.x - b.x)
+			val difY = Math.abs(a.y - b.y)
+			if (difX < CACHE_SIZE_SQRT && difY < CACHE_SIZE_SQRT) {
+				DISTANCE_CACHE[difX][difY]
+			} else {
+				val difXDouble = difX.toDouble()
+				val difYDouble = difY.toDouble()
+				Math.sqrt(difXDouble * difXDouble + difYDouble * difYDouble)
+			}
 		}
 	}
 
 	private fun constructGraph(mapLines: List<String>): Triple<WeightedGraph<Point, out WeightedEdge<Point>>, Point, Point> {
 		check(mapLines.isNotEmpty() && mapLines.all { mapLines.first().length == it.length })
+
 		return UndirectedWeightedGraph<Point, SimpleWeightedEdge<Point>>(::SimpleWeightedEdge).let { graph ->
 			var source: Point? = null
 			var target: Point? = null
@@ -66,6 +73,13 @@ class PathFinder(
 
 	companion object {
 		private const val STRAIGHT_NEIGHBOUR_DISTANCE = 1.0
-		private val DIAGONAL_NEIGHBOUR_DISTANCE = Math.sqrt(2.0)
+		private const val DIAGONAL_NEIGHBOUR_DISTANCE = 1.5
+
+		private const val CACHE_SIZE_SQRT = 200
+		private val DISTANCE_CACHE = (0 until CACHE_SIZE_SQRT).map { dx ->
+			(0 until CACHE_SIZE_SQRT).map { dy ->
+				Math.sqrt(dx.toDouble() * dx.toDouble() + dy.toDouble() * dy.toDouble())
+			}
+		}
 	}
 }

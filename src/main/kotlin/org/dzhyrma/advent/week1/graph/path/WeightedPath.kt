@@ -2,8 +2,17 @@ package org.dzhyrma.advent.week1.graph.path
 
 import org.dzhyrma.advent.week1.graph.edge.WeightedEdge
 
+/**
+ * Main interface for weighted path in graph.
+ *
+ * @param <V> type for vertices
+ * @param <E> type for weighted edges
+ */
 interface WeightedPath<V, E : WeightedEdge<V>> : Path<V, E> {
 
+	/**
+	 * Retrieves the distance of the path.
+	 */
 	val distance: Double
 }
 
