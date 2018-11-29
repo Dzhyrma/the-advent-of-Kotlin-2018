@@ -6,9 +6,9 @@ import org.dzhyrma.advent.week1.graph.edge.*
 import org.dzhyrma.advent.week1.graph.path.WeightedPath
 
 class PathFinder(
-	val wallChar: Char = 'B',
-	val startChar: Char = 'S',
-	val endChar: Char = 'X'
+	private val wallChar: Char = 'B',
+	private val startChar: Char = 'S',
+	private val endChar: Char = 'X'
 ) {
 
 	fun findShortestPath(mapString: String): WeightedPath<Point, out WeightedEdge<Point>>? {
