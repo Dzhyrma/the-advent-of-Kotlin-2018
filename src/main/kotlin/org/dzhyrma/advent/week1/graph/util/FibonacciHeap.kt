@@ -1,5 +1,11 @@
 package org.dzhyrma.advent.week1.graph.util
 
+/**
+ * This class represents a priority queue backed by a Fibonacci heap, as
+ * described by Fredman and Tarjan in 1984. It is used because of the
+ * find-minimum, insert, decrease key and merge in O(1) amortized time. Only
+ * delete and delete minimum work in O(log n) amortized time.
+ */
 class FibonacciHeap<T> {
 
 	/**
@@ -14,10 +20,15 @@ class FibonacciHeap<T> {
 		private set
 
 	/**
-	 * Returns `true` if the map is empty (contains no elements), `false` otherwise.
+	 * Returns `true` if the heap is empty (contains no elements), `false` otherwise.
 	 */
 	val isEmpty: Boolean
 		get() = min == null
+
+	/**
+	 * Returns `true` if the heap contains node, `false` otherwise.
+	 */
+	fun contains(node: Node<T>) = node.creator === this
 
 	/**
 	 * Enqueues the specified element into the heap with the specified priority.
@@ -33,15 +44,7 @@ class FibonacciHeap<T> {
 			throw IllegalArgumentException("Priority cannot be NaN.")
 		size++
 		val newNode = Node(value, priority, this)
-		when (min) {
-			null -> {
-				min = newNode.also {
-					it.right = it
-					it.left = it
-				}
-			}
-			else -> insert(newNode)
-		}
+		insert(newNode)
 
 		return newNode
 	}
@@ -52,12 +55,13 @@ class FibonacciHeap<T> {
 	 *
 	 * @param heap heap to merge with
 	 */
-	fun merge(heap: FibonacciHeap<T>) {
+	// TODO: Change creators
+	/*fun merge(heap: FibonacciHeap<T>) {
 		heap.min?.also { merge(it) }
 		size += heap.size
 		heap.min = null
 		heap.size = 0
-	}
+	}*/
 
 	/**
 	 * Deletes node from the current heap. The node will be counting as dequeued.
@@ -83,7 +87,7 @@ class FibonacciHeap<T> {
 	fun decreaseKey(node: Node<T>, newPriority: Double) {
 		check(node.creator === this) { "Given node belongs to another heap." }
 		check(!java.lang.Double.isNaN(newPriority)) { "New priority cannot be NaN." }
-		check(newPriority <= node.priority) { "New priority cannot exceed old." }
+		check(newPriority <= node.priority) { "New priority ($newPriority) cannot exceed old (${node.priority})." }
 
 		decreaseKeyUnchecked(node, newPriority)
 	}
@@ -103,6 +107,7 @@ class FibonacciHeap<T> {
 			it.right = it
 			it.left = it
 			it.rank = -1
+			it.creator = null
 		}
 	}
 
@@ -111,7 +116,7 @@ class FibonacciHeap<T> {
 			oldMin.left === min -> oldMin.child
 			oldMin.child == null -> {
 				oldMin.leaveNeighbours()
-				oldMin.right.left
+				oldMin.right
 			}
 			else -> {
 				oldMin.child?.also { child ->
@@ -119,7 +124,6 @@ class FibonacciHeap<T> {
 					oldMin.right.left = child.left
 					child.left.right = oldMin.right
 					child.left = oldMin.left
-					child.left
 				}
 			}
 		}
@@ -136,11 +140,11 @@ class FibonacciHeap<T> {
 				while (visited[candidate.rank] != null) {
 					visited[candidate.rank]?.also { temp ->
 						visited[candidate.rank] = null
-						candidate = compareAndPlaceNodes(temp, candidate)
+						candidate = mergeNodeWithSameRank(temp, candidate)
 					}
 				}
 				visited[candidate.rank] = candidate
-				if (candidate.priority < min!!.priority) {
+				if (candidate.priority < currentMin.priority) {
 					min = candidate
 				}
 				candidate = candidate.right
@@ -148,10 +152,10 @@ class FibonacciHeap<T> {
 		}
 	}
 
-	private fun compareAndPlaceNodes(temp: Node<T>, candidate: Node<T>): Node<T> {
+	private fun mergeNodeWithSameRank(temp: Node<T>, candidate: Node<T>): Node<T> {
 		temp.leaveNeighbours()
 
-		if (temp.priority < candidate.priority) {
+		return if (temp.priority < candidate.priority) {
 			if (candidate.left !== candidate) {
 				temp.left = candidate.left
 				temp.right = candidate.right
@@ -161,32 +165,27 @@ class FibonacciHeap<T> {
 				temp.right = temp
 				temp.left = temp.right
 			}
-			placeNodes(candidate, temp)
-			return temp
+			temp.apply { addChild(candidate) }
 		} else {
-			placeNodes(temp, candidate)
-			return candidate
+			candidate.apply { addChild(temp) }
 		}
 	}
 
-	private fun placeNodes(temp: Node<T>, candidate: Node<T>) {
-		if (candidate.rank == 0) {
-			candidate.child = temp
-			temp.left = temp
-			temp.right = temp.left
-		} else {
-			candidate.child?.also { child ->
-				temp.right = child.right
-				temp.left = child
-				child.right = temp
-				child.right.left = temp
-				if (child.priority > temp.priority) {
-					candidate.child = temp
+	private fun decreaseKeyUnchecked(node: Node<T>, newPriority: Double) {
+		node.priority = newPriority
+		node.parent?.also { parent ->
+			if (node.priority > parent.priority) {
+				return
+			}
+			cut(node)
+		} ?: run {
+			min?.also { currentMin ->
+				if (node.priority < currentMin.priority) {
+					min = node
 				}
 			}
+			return
 		}
-		temp.parent = candidate
-		candidate.rank++
 	}
 
 	private fun cut(node: Node<T>) {
@@ -208,24 +207,6 @@ class FibonacciHeap<T> {
 		node.parent = null
 	}
 
-	private fun decreaseKeyUnchecked(node: Node<T>, newPriority: Double) {
-		node.priority = newPriority
-		node.parent?.also { parent ->
-			if (node.priority > parent.priority) {
-				return
-			}
-			cut(node)
-		}
-		if (node.parent == null) {
-			min?.also { currentMin ->
-				if (node.priority <= currentMin.priority) {
-					min = node
-				}
-			}
-			return
-		}
-	}
-
 	private fun insert(node: Node<T>) {
 		min?.also { currentMin ->
 			node.left = currentMin
@@ -235,32 +216,35 @@ class FibonacciHeap<T> {
 			if (currentMin.priority >= node.priority) {
 				min = node
 			}
+		} ?: run {
+			min = node
 		}
 	}
 
 	private fun merge(node: Node<T>) {
 		min?.also { currentMin ->
 			node.left.right = currentMin.right
-			val temp = node.left
+			currentMin.right.left = node.left
 			node.left = currentMin
-			currentMin.right.left = temp
 			currentMin.right = node
 			if (currentMin.priority > node.priority) {
 				min = node
 			}
+		} ?: run {
+			min = node
 		}
 	}
 
-	data class Node<T> constructor(
+	class Node<T>(
 		/**
 		 * Returns the value of the node.
 		 */
 		val value: T,
 		/**
 		 * Returns the priority of the node
-		 */
-		var priority: Double,
-		internal val creator: FibonacciHeap<T>
+		 **/
+		internal var priority: Double,
+		internal var creator: FibonacciHeap<T>? = null
 	) {
 		internal var left: Node<T> = this
 		internal var right: Node<T> = this
@@ -278,6 +262,26 @@ class FibonacciHeap<T> {
 		internal fun leaveNeighbours() {
 			left.right = right
 			right.left = left
+		}
+
+		internal fun addChild(newChild: Node<T>) {
+			if (rank == 0) {
+				child = newChild
+				newChild.left = newChild
+				newChild.right = newChild
+			} else {
+				child?.also { oldChild ->
+					newChild.right = oldChild.right
+					newChild.left = oldChild
+					oldChild.right.left = newChild
+					oldChild.right = newChild
+					if (oldChild.priority > newChild.priority) {
+						child = newChild
+					}
+				}
+			}
+			newChild.parent = this
+			rank++
 		}
 	}
 }

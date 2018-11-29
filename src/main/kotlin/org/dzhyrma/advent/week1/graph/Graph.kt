@@ -1,92 +1,138 @@
 package org.dzhyrma.advent.week1.graph
 
-interface Graph<V> {
-	/** Returns the number of edges in this graph.
-	 *
-	 * @return the number of edges in this graph
-	 */
-	val size: Int
+import org.dzhyrma.advent.week1.graph.edge.Edge
 
-	/** Adds a new edge to the graph. In order to use this method, graph should
-	 * have an edge factory specified.
+/**
+ * Main interface for all graphs.
+ *
+ * @param <V> type for vertices
+ * @param <E> type for edges. Should implement Edge interface
+ */
+interface Graph<V, E: Edge<V>> {
+
+	/**
+	 * Returns a [Set] view of the vertices contained in this graph.
+	 */
+	val vertices: Set<V>
+
+	/**
+	 * Returns a [Set] view of the edges contained in this graph.
+	 */
+	val edges: Set<E>
+
+	/**
+	 * Adds a new edge to the graph. In order to use this method, graph should have an edge factory specified.
 	 *
-	 * If current graph doesn't contain any of the vertices from the edge, they
-	 * will be added to the graph automatically.
+	 * If current graph doesn't contain any of the vertices from the edge, they will be added to the graph
+	 * automatically.
 	 *
 	 * @param v1 source vertex of the edge
 	 * @param v2 target vertex of the edge
-	 * @return <tt>true</tt> if this graph did not already contain the specified
-	 * edge
+	 * @return <tt>true</tt> if this graph did not already contain the specified edge
 	 */
 	fun addEdge(v1: V, v2: V): Boolean
 
-	/** Adds a new vertex to the graph.
+	/**
+	 * Adds a new edge to the graph.
 	 *
-	 * @param v vertex to be added to the graph
+	 * If current graph doesn't contain any of the vertices from the edge, they will be added to the graph
+	 * automatically.
+	 *
+	 * @param edge edge to be added to the graph
 	 * @return <tt>true</tt> if this graph did not already contain the specified
-	 * vertex
+	 * edge
+	 */
+	fun addEdge(edge: E): Boolean
+
+	/**
+	 * Adds a new vertex to the graph.
+	 *
+	 * @param vertex vertex to be added to the graph
+	 * @return <tt>true</tt> if this graph did not already contain the specified vertex
 	 */
 	fun addVertex(vertex: V): Boolean
 
-	/** Removes all of the vertices and edges from this graph. The graph will be
-	 * empty after this call returns.
+	/**
+	 * Removes all of the vertices and edges from this graph. The graph will be empty after this call returns.
 	 */
 	fun clear()
 
-	/** Returns <tt>true</tt> if this graph contains the specified edge.
+	/**
+	 * Returns <tt>true</tt> if this graph contains the specified edge.
 	 *
-	 * This graph will check existence of an edge using vertex `v1` as a
-	 * source and vertex `v2` as a target.
+	 * This graph will check existence of an edge using vertex `v1` as a source and vertex `v2` as a target.
 	 *
 	 * @param v1 source vertex of the edge
 	 * @param v2 target vertex of the edge
-	 *
-	 * @return <tt>true</tt> if this graph contains at least one edge between
-	 * specified vertices.
+	 * @return <tt>true</tt> if this graph contains at least one edge between specified vertices.
 	 */
 	fun containsEdge(v1: V, v2: V): Boolean
 
-	/** Returns <tt>true</tt> if this graph contains the specified vertex.
+	/**
+	 * Returns <tt>true</tt> if this graph contains the specified edge.
+	 *
+	 * This graph uses `equals()` to distinguish edges between each other.
+	 *
+	 * @param edge edge to be checked
+	 * @return <tt>true</tt> if this graph contains the specified edge
+	 */
+	fun containsEdge(edge: E): Boolean
+
+	/**
+	 * Returns <tt>true</tt> if this graph contains the specified vertex.
 	 *
 	 * This graph uses `equals()` to distinguish vertices between each other.
 	 *
-	 * @param v vertex to be checked
-	 *
+	 * @param vertex vertex to be checked
 	 * @return <tt>true</tt> if this graph contains the specified vertex.
 	 */
 	fun containsVertex(vertex: V): Boolean
 
-	/** Returns a [Set] view of the vertices contained in this graph. The set
-	 * is backed by the graph, so changes to the graph are reflected in the set,
-	 * and vice-versa. The set supports vertex removal, which removes the
-	 * corresponding vertex from the graph, via the <tt>Set.remove</tt>,
-	 * <tt>removeAll</tt>, <tt>retainAll</tt>, and <tt>clear</tt> operations. It
-	 * also supports the <tt>add</tt> and <tt>addAll</tt> operations. It does not
-	 * support <tt>Iterator.remove</tt>.
+	/**
+	 * Finds edge that connects specified vertices.
 	 *
-	 * @return a set view of the vertices contained in this graph
+	 * @param v1 source vertex of the edge
+	 * @param v2 target vertex of the edge
+	 * @return <tt>edge</tt> if this graph contains it, null otherwise
 	 */
-	fun getAllVertices(): Set<V>
+	fun findEdge(v1: V, v2: V): E?
 
-	/** Returns the number of edges with `v` as their initial vertex.
+	/**
+	 * Returns a [Set] view of the edges from the source <tt>vertex</tt> contained in this graph.
 	 *
-	 * @param v initial vertex for getting the "out" degree
+	 * @param vertex source vertex of the edges
+	 * @return a Set view of the edges from the source <tt>vertex</tt> contained in this graph
+	 */
+	fun getEdgesFromSource(vertex: V): Set<E>
+
+	/**
+	 * Returns a [Set] view of the edges to the target <tt>vertex</tt> contained in this graph.
 	 *
-	 * @return the number of edges with `v` as their initial vertex. Returns
+	 * @param vertex target vertex of the edges
+	 * @return a Set view of the edges to the target <tt>vertex</tt> contained in this graph
+	 */
+	fun getEdgesToTarget(vertex: V): Set<E>
+
+	/**
+	 * Returns the number of edges with `vertex` as their initial vertex.
+	 *
+	 * @param vertex initial vertex for getting the "out" degree
+	 * @return the number of edges with `vertex` as their initial vertex. Returns
 	 * -1, if the graph doesn't contain the specified vertex.
 	 */
 	fun getOutDegree(vertex: V): Int
 
-	/** Returns the number of edges with `v` as their terminal vertex.
+	/**
+	 * Returns the number of edges with `vertex` as their terminal vertex.
 	 *
-	 * @param v terminal vertex for getting the "in" degree
-	 *
-	 * @return the number of edges with `v` as their terminal vertex. Returns
+	 * @param vertex terminal vertex for getting the "in" degree
+	 * @return the number of edges with `vertex` as their terminal vertex. Returns
 	 * -1, if the graph doesn't contain the specified vertex.
 	 */
 	fun getInDegree(vertex: V): Int
 
-	/** Removes an edge from this graph.
+	/**
+	 * Removes an edge from this graph.
 	 *
 	 * @param v1 source vertex of the edge
 	 * @param v2 target vertex of the edge
@@ -94,10 +140,18 @@ interface Graph<V> {
 	 */
 	fun removeEdge(v1: V, v2: V): Boolean
 
-	/** Removes a vertex from this graph.
+	/**
+	 * Removes an edge from this graph.
 	 *
-	 * @param v vertex to be removed
+	 * @param edge edge to be removed
+	 * @return <tt>true</tt> if the edge has been successfully removed
+	 */
+	fun removeEdge(edge: E): Boolean
+
+	/**
+	 * Removes a vertex from this graph.
 	 *
+	 * @param vertex vertex to be removed
 	 * @return <tt>true</tt> if the vertex has been successfully removed
 	 */
 	fun removeVertex(vertex: V): Boolean

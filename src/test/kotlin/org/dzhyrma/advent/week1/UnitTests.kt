@@ -1,11 +1,13 @@
 package org.dzhyrma.advent.week1
 
+import org.dzhyrma.advent.week1.graph.UndirectedWeightedGraph
+import org.dzhyrma.advent.week1.graph.edge.SimpleWeightedEdge
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 
 class MarkingWayOnMapTests {
 
-	private val pathFinder = PathFinder()
+	val pathFinder = PathFinder()
 
 	@Test
 	fun `Markes start and end as part of way`() {
@@ -189,6 +191,13 @@ BB....BBB...B.B...B.....B.B..B.B....B.B.B...B.B..BBBBBB.B....B...BB..BBB...B.BB.
 	}
 
 	private fun addPath(mapString: String): String {
-
+		val shortestPath = pathFinder.findShortestPath(mapString)
+		val charArray = mapString.toCharArray()
+		val lineLength = mapString.indexOf('\n') + 1
+		shortestPath?.vertices?.forEach {
+			val charPosition = it.y * lineLength + it.x
+			charArray[charPosition] = '*'
+		}
+		return String(charArray)
 	}
 }

@@ -1,19 +1,48 @@
 package org.dzhyrma.advent.week1.graph
 
-class UndirectedGraph<V> : Graph<V> {
+import org.dzhyrma.advent.week1.graph.edge.WeightedEdge
 
-	private val vertexMap: MutableMap<V, MutableSet<V>> = HashMap()
+class UndirectedWeightedGraph<V, E: WeightedEdge<V>> (
+	private val weightedEdgeFactory: (V, V, Double) -> E
+): WeightedGraph<V, E> {
 
-	override val size: Int
-		get() = vertexMap.size
+	private val vertexMap: MutableMap<V, MutableMap<V, E>> = hashMapOf()
 
-	override fun addEdge(v1: V, v2: V): Boolean {
-		return vertexMap.getOrPut(v1) { hashSetOf() }.add(v2)
-			&& vertexMap.getOrPut(v2) { hashSetOf() }.add(v1)
+	private val allEdges: MutableSet<E> = hashSetOf()
+
+	override val vertices: Set<V>
+		get() = vertexMap.keys
+
+	override val edges: Set<E>
+		get() = allEdges
+
+	override fun addEdge(v1: V, v2: V, weight: Double): Boolean {
+		val edgesV1 = vertexMap.getOrPut(v1) { hashMapOf() }
+		val existingEdge = edgesV1[v2]
+		return if (existingEdge != null) {
+			existingEdge.weight = weight
+			true
+		} else {
+			val newEdge = weightedEdgeFactory.invoke(v1, v2, weight)
+			edgesV1[v2] = newEdge
+			vertexMap.getOrPut(v2) { hashMapOf() }[v1] = newEdge
+			allEdges.add(newEdge)
+		}
+	}
+
+	override fun addEdge(edge: E, weight: Double): Boolean {
+		val edgesV1 = vertexMap.getOrPut(edge.source) { hashMapOf() }
+		val existingEdge = edgesV1[edge.target]
+		if (existingEdge != null) {
+			allEdges.remove(existingEdge)
+		}
+		edgesV1[edge.target] = edge
+		vertexMap.getOrPut(edge.target) { hashMapOf() }[edge.source] = edge
+		return allEdges.add(edge)
 	}
 
 	override fun addVertex(vertex: V): Boolean {
-		vertexMap.getOrPut(vertex) { hashSetOf() }
+		vertexMap.getOrPut(vertex) { hashMapOf() }
 		return true
 	}
 
@@ -21,22 +50,42 @@ class UndirectedGraph<V> : Graph<V> {
 		vertexMap.clear()
 	}
 
-	override fun containsEdge(v1: V, v2: V): Boolean = vertexMap[v1]?.contains(v2) ?: false
+	override fun containsEdge(v1: V, v2: V): Boolean = findEdge(v1, v2) != null
+
+	override fun containsEdge(edge: E): Boolean = allEdges.contains(edge)
 
 	override fun containsVertex(vertex: V): Boolean = vertexMap.containsKey(vertex)
 
-	override fun getAllVertices(): Set<V> = vertexMap.keys
+	override fun findEdge(v1: V, v2: V): E? = vertexMap[v1]?.get(v2)
+
+	override fun getEdgesFromSource(vertex: V): Set<E> = vertexMap[vertex]?.values?.toSet() ?: emptySet()
+
+	override fun getEdgesToTarget(vertex: V): Set<E> = getEdgesFromSource(vertex)
 
 	override fun getOutDegree(vertex: V): Int = vertexMap[vertex]?.size ?: -1
 
 	override fun getInDegree(vertex: V): Int = vertexMap[vertex]?.size ?: -1
 
 	override fun removeEdge(v1: V, v2: V): Boolean {
-		return (vertexMap[v1]?.remove(v2) ?: false)
-			&& (vertexMap[v2]?.remove(v1) ?: false)
+		val edgesV1 = vertexMap[v1] ?: return false
+		val edgesV2 = vertexMap[v2] ?: return false
+
+		edgesV1.remove(v2)
+		edgesV2.remove(v1)?.also { return allEdges.remove(it) }
+		return false
+	}
+
+	override fun removeEdge(edge: E): Boolean {
+		return if (allEdges.remove(edge)) {
+			vertexMap[edge.source]?.remove(edge.target)
+			vertexMap[edge.target]?.remove(edge.source)
+			true
+		} else {
+			false
+		}
 	}
 
 	override fun removeVertex(vertex: V): Boolean = vertexMap.remove(vertex)?.let { adjVertices ->
-		adjVertices.fold(true) { result, adjVertex -> result && removeEdge(adjVertex, vertex) }
+		adjVertices.entries.fold(true) { result, (_, edge) -> result && removeEdge(edge) }
 	} ?: false
 }
