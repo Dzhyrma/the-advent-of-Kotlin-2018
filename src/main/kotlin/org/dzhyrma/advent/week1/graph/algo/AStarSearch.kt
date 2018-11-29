@@ -20,7 +20,6 @@ object AStarSearch {
 		var targetReached = false
 		while (!heap.isEmpty && !targetReached) {
 			heap.dequeueMin()?.value?.also { cur ->
-
 				/* Target vertex is reached. */
 				if (target == cur.vertex) {
 					targetReached = true
@@ -73,7 +72,7 @@ object AStarSearch {
 		return SimpleWeightedPath(source, target, edges)
 	}
 
-	class Tuple<V>(
+	data class Tuple<V>(
 		val vertex: V,
 		var distance: Double
 	)

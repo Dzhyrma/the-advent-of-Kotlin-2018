@@ -39,17 +39,17 @@ class PathFinder(
 								endChar -> target = vertex
 							}
 
-							if (x + 1 < line.length && y + 1 < mapLines.size && mapLines[y + 1][x + 1] != wallChar) {
-								graph.addEdge(vertex, Point(x + 1, y + 1), DIAGONAL_NEIGHBOUR_DISTANCE)
+							if (x + 1 < line.length && y - 1 >= 0 && mapLines[y - 1][x + 1] != wallChar) {
+								graph.addEdge(vertex, Point(x + 1, y - 1), DIAGONAL_NEIGHBOUR_DISTANCE)
 							}
-							if (x - 1 >= 0 && y + 1 < mapLines.size && mapLines[y + 1][x - 1] != wallChar) {
-								graph.addEdge(vertex, Point(x - 1, y + 1), DIAGONAL_NEIGHBOUR_DISTANCE)
+							if (x - 1 >= 0 && y - 1 >= 0 && mapLines[y - 1][x - 1] != wallChar) {
+								graph.addEdge(vertex, Point(x - 1, y - 1), DIAGONAL_NEIGHBOUR_DISTANCE)
 							}
-							if (x + 1 < line.length && line[x + 1] != wallChar) {
-								graph.addEdge(vertex, Point(x + 1, y), STRAIGHT_NEIGHBOUR_DISTANCE)
+							if (x - 1 >= 0 && line[x - 1] != wallChar) {
+								graph.addEdge(vertex, Point(x - 1, y), STRAIGHT_NEIGHBOUR_DISTANCE)
 							}
-							if (y + 1 < mapLines.size && mapLines[y + 1][x] != wallChar) {
-								graph.addEdge(vertex, Point(x, y + 1), STRAIGHT_NEIGHBOUR_DISTANCE)
+							if (y - 1 >= 0 && mapLines[y - 1][x] != wallChar) {
+								graph.addEdge(vertex, Point(x, y - 1), STRAIGHT_NEIGHBOUR_DISTANCE)
 							}
 						}
 					}
@@ -66,6 +66,6 @@ class PathFinder(
 
 	companion object {
 		private const val STRAIGHT_NEIGHBOUR_DISTANCE = 1.0
-		private const val DIAGONAL_NEIGHBOUR_DISTANCE = 1.0
+		private val DIAGONAL_NEIGHBOUR_DISTANCE = Math.sqrt(2.0)
 	}
 }

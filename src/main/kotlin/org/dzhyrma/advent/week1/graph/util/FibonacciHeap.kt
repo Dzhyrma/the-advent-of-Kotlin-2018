@@ -50,20 +50,6 @@ class FibonacciHeap<T> {
 	}
 
 	/**
-	 * Merges current heap with the given one. After merge the second heap will be
-	 * empty.
-	 *
-	 * @param heap heap to merge with
-	 */
-	// TODO: Change creators
-	/*fun merge(heap: FibonacciHeap<T>) {
-		heap.min?.also { merge(it) }
-		size += heap.size
-		heap.min = null
-		heap.size = 0
-	}*/
-
-	/**
 	 * Deletes node from the current heap. The node will be counting as dequeued.
 	 *
 	 * @param node node to delete
@@ -163,33 +149,40 @@ class FibonacciHeap<T> {
 				candidate.left.right = temp
 			} else {
 				temp.right = temp
-				temp.left = temp.right
+				temp.left = temp
+			}
+			if (min === candidate) {
+				min = temp
 			}
 			temp.apply { addChild(candidate) }
 		} else {
+			if (min === temp) {
+				min = candidate
+			}
 			candidate.apply { addChild(temp) }
 		}
 	}
 
 	private fun decreaseKeyUnchecked(node: Node<T>, newPriority: Double) {
 		node.priority = newPriority
-		node.parent?.also { parent ->
-			if (node.priority > parent.priority) {
+		node.parent.also { parent ->
+			if (parent != null && parent.rank > 0) {
+				if (node.priority < parent.priority) {
+					cut(node, parent)
+				}
+			} else {
+				min?.also { currentMin ->
+					if (node.priority < currentMin.priority) {
+						min = node
+					}
+				}
 				return
 			}
-			cut(node)
-		} ?: run {
-			min?.also { currentMin ->
-				if (node.priority < currentMin.priority) {
-					min = node
-				}
-			}
-			return
 		}
 	}
 
-	private fun cut(node: Node<T>) {
-		node.parent?.also { parent ->
+	private fun cut(node: Node<T>, parent: Node<T>) {
+		if (parent.rank > 0) {
 			if (parent.child === node) {
 				parent.child = if (node.left === node) null else node.right
 			}
@@ -197,10 +190,12 @@ class FibonacciHeap<T> {
 			node.leaveNeighbours()
 			node.isMarked = false
 			insert(node)
-			if (parent.parent != null) {
-				when {
-					parent.isMarked -> cut(parent)
-					else -> parent.isMarked = true
+			parent.parent.also { grandParent ->
+				if (grandParent != null && grandParent.rank > 0) {
+					when {
+						parent.isMarked -> cut(parent, grandParent)
+						else -> parent.isMarked = true
+					}
 				}
 			}
 		}
@@ -211,8 +206,8 @@ class FibonacciHeap<T> {
 		min?.also { currentMin ->
 			node.left = currentMin
 			node.right = currentMin.right
-			currentMin.right.left = node
 			currentMin.right = node
+			node.right.left = node
 			if (currentMin.priority >= node.priority) {
 				min = node
 			}
@@ -221,18 +216,35 @@ class FibonacciHeap<T> {
 		}
 	}
 
-	private fun merge(node: Node<T>) {
-		min?.also { currentMin ->
-			node.left.right = currentMin.right
-			currentMin.right.left = node.left
-			node.left = currentMin
-			currentMin.right = node
-			if (currentMin.priority > node.priority) {
-				min = node
+	override fun toString(): String {
+		return min?.let { currentMin ->
+			val stringBuilder = StringBuilder().apply {
+				fun appendNodeString(node: Node<T>, prefix: String) {
+					var pc = "│ "
+					var temp = node
+					while (true) {
+						if (temp.right != node) {
+							append("$prefix├─")
+						} else {
+							append("$prefix└─")
+							pc = "  "
+						}
+						temp.child.also { child ->
+							if (child == null) {
+								appendln("─ ${temp.priority}, ${temp.value}")
+							} else {
+								appendln("┐ ${temp.priority}, ${temp.value}")
+								appendNodeString(child, prefix + pc)
+							}
+						}
+						if (temp.right == node) break
+						temp = temp.right
+					}
+				}
+				appendNodeString(currentMin, "")
 			}
-		} ?: run {
-			min = node
-		}
+			stringBuilder.toString()
+		} ?: "<empty>"
 	}
 
 	class Node<T>(
@@ -273,8 +285,9 @@ class FibonacciHeap<T> {
 				child?.also { oldChild ->
 					newChild.right = oldChild.right
 					newChild.left = oldChild
-					oldChild.right.left = newChild
 					oldChild.right = newChild
+					newChild.right.left = newChild
+
 					if (oldChild.priority > newChild.priority) {
 						child = newChild
 					}
