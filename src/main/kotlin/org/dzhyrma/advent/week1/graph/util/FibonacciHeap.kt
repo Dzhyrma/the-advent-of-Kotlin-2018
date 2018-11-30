@@ -118,7 +118,7 @@ class FibonacciHeap<T> {
 
 	private fun consolidateTrees() {
 		min?.also { currentMin ->
-			val visited = arrayOfNulls<Node<T>>(32 - Integer.numberOfLeadingZeros(size))
+			val visited = arrayOfNulls<Node<T>>(33 - Integer.numberOfLeadingZeros(size))
 			var candidate = currentMin.right
 			visited[currentMin.rank] = currentMin
 			while (visited[candidate.rank] !== candidate) {
@@ -130,7 +130,7 @@ class FibonacciHeap<T> {
 					}
 				}
 				visited[candidate.rank] = candidate
-				if (candidate.priority < currentMin.priority) {
+				if (candidate.priority < min!!.priority) {
 					min = candidate
 				}
 				candidate = candidate.right
