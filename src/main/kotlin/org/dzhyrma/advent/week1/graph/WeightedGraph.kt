@@ -1,6 +1,6 @@
 package org.dzhyrma.advent.week1.graph
 
-import org.dzhyrma.advent.week1.graph.edge.WeightedEdge
+import org.dzhyrma.advent.week1.graph.edge.*
 
 /**
  * Main interface for all weighted graphs.
@@ -49,5 +49,15 @@ interface MutableWeightedGraph<V, E: WeightedEdge<V>> : MutableGraph<V, E>, Weig
 
 	companion object {
 		const val DEFAULT_WEIGHT = 0.0
+	}
+}
+
+/**
+ * Performs the given [action] on each adjacent edge, target vertex and edge's weight.
+ */
+fun <V, E: WeightedEdge<V>> Graph<V, E>.forEachEdge(source: V, action: (E, V, Double) -> Unit) {
+	getEdgesFromSource(source).forEach {
+		val target = if (it.source == source) it.target else it.source
+		action(it, target, it.weight)
 	}
 }

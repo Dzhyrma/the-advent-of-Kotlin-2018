@@ -8,7 +8,7 @@ class MarkingWayOnMapTests {
 	val pathFinder = PathFinder()
 
 	@Test
-	fun `Markes start and end as part of way`() {
+	fun `Marks start and end as part of way`() {
 		val mapString = """
         ....................
         .........XS.........

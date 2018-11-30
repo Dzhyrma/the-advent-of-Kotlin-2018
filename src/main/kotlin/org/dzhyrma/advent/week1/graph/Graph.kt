@@ -165,3 +165,20 @@ interface MutableGraph<V, E: Edge<V>> : Graph<V, E> {
 	 */
 	fun removeVertex(vertex: V): Boolean
 }
+
+/**
+ * Performs the given [action] on each adjacent edge.
+ */
+fun <V, E: Edge<V>> Graph<V, E>.forEachEdge(source: V, action: (E) -> Unit) {
+	getEdgesFromSource(source).forEach { action(it) }
+}
+
+/**
+ * Performs the given [action] on each adjacent edge and target vertex.
+ */
+fun <V, E: Edge<V>> Graph<V, E>.forEachEdge(source: V, action: (E, V) -> Unit) {
+	getEdgesFromSource(source).forEach {
+		val target = if (it.source == source) it.target else it.source
+		action(it, target)
+	}
+}
