@@ -6,6 +6,7 @@ import org.dzhyrma.advent.week1.graph.edge.*
 import org.dzhyrma.advent.week1.graph.path.WeightedPath
 
 class PathFinder(
+	private val validChar: Char = '.',
 	private val wallChar: Char = 'B',
 	private val startChar: Char = 'S',
 	private val endChar: Char = 'X'
@@ -44,6 +45,8 @@ class PathFinder(
 							when (char) {
 								startChar -> source = vertex
 								endChar -> target = vertex
+								validChar -> {}
+								else -> error( "Encountered an invalid char '$char'" )
 							}
 
 							if (x + 1 < line.length && y - 1 >= 0 && mapLines[y - 1][x + 1] != wallChar) {
