@@ -8,13 +8,13 @@ package org.dzhyrma.advent.week1.graph.edge
 interface WeightedEdge<V> : Edge<V> {
 
 	/**
-	 * Weight of the edge.
+	 * Returns weight of the edge.
 	 */
-	var weight: Double
+	val weight: Double
 }
 
 data class SimpleWeightedEdge<V>(
 	override val source: V,
 	override val target: V,
-	override var weight: Double
+	override val weight: Double
 ) : WeightedEdge<V>

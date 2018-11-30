@@ -21,43 +21,6 @@ interface Graph<V, E: Edge<V>> {
 	val edges: Set<E>
 
 	/**
-	 * Adds a new edge to the graph. In order to use this method, graph should have an edge factory specified.
-	 *
-	 * If current graph doesn't contain any of the vertices from the edge, they will be added to the graph
-	 * automatically.
-	 *
-	 * @param v1 source vertex of the edge
-	 * @param v2 target vertex of the edge
-	 * @return <tt>true</tt> if this graph did not already contain the specified edge
-	 */
-	fun addEdge(v1: V, v2: V): Boolean
-
-	/**
-	 * Adds a new edge to the graph.
-	 *
-	 * If current graph doesn't contain any of the vertices from the edge, they will be added to the graph
-	 * automatically.
-	 *
-	 * @param edge edge to be added to the graph
-	 * @return <tt>true</tt> if this graph did not already contain the specified
-	 * edge
-	 */
-	fun addEdge(edge: E): Boolean
-
-	/**
-	 * Adds a new vertex to the graph.
-	 *
-	 * @param vertex vertex to be added to the graph
-	 * @return <tt>true</tt> if this graph did not already contain the specified vertex
-	 */
-	fun addVertex(vertex: V): Boolean
-
-	/**
-	 * Removes all of the vertices and edges from this graph. The graph will be empty after this call returns.
-	 */
-	fun clear()
-
-	/**
 	 * Returns <tt>true</tt> if this graph contains the specified edge.
 	 *
 	 * This graph will check existence of an edge using vertex `v1` as a source and vertex `v2` as a target.
@@ -130,6 +93,52 @@ interface Graph<V, E: Edge<V>> {
 	 * -1, if the graph doesn't contain the specified vertex.
 	 */
 	fun getInDegree(vertex: V): Int
+}
+
+/**
+ * Main interface for all mutable graphs.
+ *
+ * @param <V> type for vertices
+ * @param <E> type for edges. Should implement Edge interface
+ */
+interface MutableGraph<V, E: Edge<V>> : Graph<V, E> {
+
+	/**
+	 * Adds a new edge to the graph. In order to use this method, graph should have an edge factory specified.
+	 *
+	 * If current graph doesn't contain any of the vertices from the edge, they will be added to the graph
+	 * automatically.
+	 *
+	 * @param v1 source vertex of the edge
+	 * @param v2 target vertex of the edge
+	 * @return <tt>true</tt> if this graph did not already contain the specified edge
+	 */
+	fun addEdge(v1: V, v2: V): Boolean
+
+	/**
+	 * Adds a new edge to the graph.
+	 *
+	 * If current graph doesn't contain any of the vertices from the edge, they will be added to the graph
+	 * automatically.
+	 *
+	 * @param edge edge to be added to the graph
+	 * @return <tt>true</tt> if this graph did not already contain the specified
+	 * edge
+	 */
+	fun addEdge(edge: E): Boolean
+
+	/**
+	 * Adds a new vertex to the graph.
+	 *
+	 * @param vertex vertex to be added to the graph
+	 * @return <tt>true</tt> if this graph did not already contain the specified vertex
+	 */
+	fun addVertex(vertex: V): Boolean
+
+	/**
+	 * Removes all of the vertices and edges from this graph. The graph will be empty after this call returns.
+	 */
+	fun clear()
 
 	/**
 	 * Removes an edge from this graph.
@@ -155,5 +164,4 @@ interface Graph<V, E: Edge<V>> {
 	 * @return <tt>true</tt> if the vertex has been successfully removed
 	 */
 	fun removeVertex(vertex: V): Boolean
-
 }

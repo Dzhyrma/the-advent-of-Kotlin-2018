@@ -8,12 +8,12 @@ package org.dzhyrma.advent.week1.graph.edge
 interface Edge<V> {
 
 	/**
-	 * Retrieves the source of this edge.
+	 * Returns the source of this edge.
 	 */
 	val source: V
 
 	/**
-	 * Retrieves the target of this edge.
+	 * Returns the target of this edge.
 	 */
 	val target: V
 }

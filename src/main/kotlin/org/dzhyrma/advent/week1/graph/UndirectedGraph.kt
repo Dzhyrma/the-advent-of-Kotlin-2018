@@ -2,9 +2,9 @@ package org.dzhyrma.advent.week1.graph
 
 import org.dzhyrma.advent.week1.graph.edge.WeightedEdge
 
-class UndirectedWeightedGraph<V, E: WeightedEdge<V>> (
+class UndirectedWeightedGraph<V, E : WeightedEdge<V>>(
 	private val weightedEdgeFactory: (V, V, Double) -> E
-): WeightedGraph<V, E> {
+) : MutableWeightedGraph<V, E> {
 
 	private val vertexMap: MutableMap<V, MutableMap<V, E>> = hashMapOf()
 
@@ -19,15 +19,13 @@ class UndirectedWeightedGraph<V, E: WeightedEdge<V>> (
 	override fun addEdge(v1: V, v2: V, weight: Double): Boolean {
 		val edgesV1 = vertexMap.getOrPut(v1) { hashMapOf() }
 		val existingEdge = edgesV1[v2]
-		return if (existingEdge != null) {
-			existingEdge.weight = weight
-			true
-		} else {
-			val newEdge = weightedEdgeFactory.invoke(v1, v2, weight)
-			edgesV1[v2] = newEdge
-			vertexMap.getOrPut(v2) { hashMapOf() }[v1] = newEdge
-			allEdges.add(newEdge)
+		if (existingEdge != null) {
+			allEdges.remove(existingEdge)
 		}
+		val newEdge = weightedEdgeFactory.invoke(v1, v2, weight)
+		edgesV1[v2] = newEdge
+		vertexMap.getOrPut(v2) { hashMapOf() }[v1] = newEdge
+		return allEdges.add(newEdge)
 	}
 
 	override fun addEdge(edge: E, weight: Double): Boolean {

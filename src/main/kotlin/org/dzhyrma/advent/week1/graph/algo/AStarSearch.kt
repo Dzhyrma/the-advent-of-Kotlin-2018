@@ -2,13 +2,13 @@ package org.dzhyrma.advent.week1.graph.algo
 
 import org.dzhyrma.advent.week1.graph.WeightedGraph
 import org.dzhyrma.advent.week1.graph.edge.WeightedEdge
-import org.dzhyrma.advent.week1.graph.path.SimpleWeightedPath
+import org.dzhyrma.advent.week1.graph.path.*
 import org.dzhyrma.advent.week1.graph.util.FibonacciHeap
 import java.util.*
 
 object AStarSearch {
 
-	fun <V, E : WeightedEdge<V>> perform(graph: WeightedGraph<V, E>, source: V, target: V, heuristic: (V, V) -> Double): SimpleWeightedPath<V, E>? {
+	fun <V, E : WeightedEdge<V>> perform(graph: WeightedGraph<V, E>, source: V, target: V, heuristic: (V, V) -> Double): WeightedPath<V, E>? {
 		val previous = HashMap<V, E>(graph.vertices.size)
 
 		/* Keep track on vertices with distance passed inserted to Fibonacci heap. */

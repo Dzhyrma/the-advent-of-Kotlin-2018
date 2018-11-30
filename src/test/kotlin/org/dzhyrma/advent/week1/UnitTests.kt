@@ -1,7 +1,5 @@
 package org.dzhyrma.advent.week1
 
-import org.dzhyrma.advent.week1.graph.UndirectedWeightedGraph
-import org.dzhyrma.advent.week1.graph.edge.SimpleWeightedEdge
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 

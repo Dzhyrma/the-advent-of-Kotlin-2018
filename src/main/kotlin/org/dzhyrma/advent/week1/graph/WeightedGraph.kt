@@ -6,8 +6,17 @@ import org.dzhyrma.advent.week1.graph.edge.WeightedEdge
  * Main interface for all weighted graphs.
  *
  * @param <V> type for vertices
+ * @param <E> type for weighted edges
  */
-interface WeightedGraph<V, E: WeightedEdge<V>> : Graph<V, E> {
+interface WeightedGraph<V, E: WeightedEdge<V>> : Graph<V, E>
+
+/**
+ * Main interface for all mutable weighted graphs.
+ *
+ * @param <V> type for vertices
+ * @param <E> type for weighted edges
+ */
+interface MutableWeightedGraph<V, E: WeightedEdge<V>> : MutableGraph<V, E>, WeightedGraph<V, E> {
 
 	/**
 	 * Adds a new weighted edge to the graph. In order to use this method, graph should have an edge factory specified.
