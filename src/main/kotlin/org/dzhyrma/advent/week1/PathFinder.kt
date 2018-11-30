@@ -22,9 +22,7 @@ class PathFinder(
 			if (difX < CACHE_SIZE_SQRT && difY < CACHE_SIZE_SQRT) {
 				DISTANCE_CACHE[difX][difY]
 			} else {
-				val difXDouble = difX.toDouble()
-				val difYDouble = difY.toDouble()
-				Math.sqrt(difXDouble * difXDouble + difYDouble * difYDouble)
+				Math.hypot(difX.toDouble(), difY.toDouble())
 			}
 		}
 	}
@@ -81,7 +79,7 @@ class PathFinder(
 		private const val CACHE_SIZE_SQRT = 200
 		private val DISTANCE_CACHE = (0 until CACHE_SIZE_SQRT).map { dx ->
 			(0 until CACHE_SIZE_SQRT).map { dy ->
-				Math.sqrt(dx.toDouble() * dx.toDouble() + dy.toDouble() * dy.toDouble())
+				Math.hypot(dx.toDouble(), dy.toDouble())
 			}
 		}
 	}
